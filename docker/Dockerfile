@@ -1,14 +1,13 @@
-# Stage 1: 构建工具层（Debian 含 curl/bash/procps/dnsutils）
-FROM debian:stable-slim AS tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates bash procps dnsutils \
-    && rm -rf /var/lib/apt/lists/*
+# Stage 1: 提取 SmartDNS 静态二进制
+FROM pymumu/smartdns:latest AS smartdns
 
-# Stage 2: SmartDNS 运行层（distroless + 工具 + 脚本）
-FROM pymumu/smartdns:latest
+# Stage 2: Alpine 运行环境
+FROM alpine:3.20
 
-# 复制工具及依赖库（glibc 兼容，无冲突）
-COPY --from=tools / /
+RUN apk add --no-cache curl bash procps bind-tools
+
+# 复制 SmartDNS 静态二进制（静态编译，musl 兼容）
+COPY --from=smartdns /usr/bin/smartdns /usr/bin/smartdns
 
 # 复制运行时脚本
 COPY scripts/entrypoint.sh /entrypoint.sh
