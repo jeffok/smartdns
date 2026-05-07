@@ -50,10 +50,9 @@ download proxy-list.txt    "https://raw.githubusercontent.com/Loyalsoldier/v2ray
 download geosite-gfw.txt   "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt"
 download china_ip_list.txt "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/text/cn.txt"
 
-# --- 自定义规则（来自 mosdns 项目）---
+# --- AI 域名列表（sync-ai.sh 每 2 分钟也会同步，此处日更一次兜底）---
 download ai-list.txt       "https://raw.githubusercontent.com/jeffok/mosdns/main/rules/ai-list.txt"
-download custom-hosts.txt  "https://raw.githubusercontent.com/jeffok/mosdns/main/rules/custom-hosts.txt"
-download custom-local.txt  "https://raw.githubusercontent.com/jeffok/mosdns/main/rules/custom-local.txt"
+# custom-hosts.txt / custom-local.txt 为用户本地编辑文件，不会被覆盖
 
 # --- 虚假 NXDOMAIN IP 过滤 ---
 download bogus-nxdomain.china.conf \

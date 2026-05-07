@@ -22,8 +22,8 @@ rr-ttl 300
 # --- 双栈优先 ---
 dualstack-ip-selection yes
 
-# --- ECS (EDNS Client Subnet) ---
-edns-client-subnet __ECS_PRESET__
+# ECS 由 entrypoint 根据 ECS_PRESET 环境变量决定是否启用
+__ECS_LINE__
 
 # ==========================================
 # 域名数据集

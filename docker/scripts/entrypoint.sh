@@ -17,9 +17,9 @@ log "container DNS set to $CONTAINER_DNS"
 
 # ---- 2. 从环境变量生成 smartdns.conf ----
 # DNS 上游（逗号分隔 IP:PORT）
-DNS_CN="${DNS_CN:-119.29.29.29,223.5.5.5,114.114.114.114}"
+DNS_CN="${DNS_CN:-119.29.29.29,223.5.5.5,114.114.114.114,202.96.128.86}"
 DNS_GLOBAL="${DNS_GLOBAL:-1.1.1.1,8.8.8.8,9.9.9.9}"
-DNS_AI="${DNS_AI:-$DNS_GLOBAL}"
+DNS_AI="${DNS_AI:-1.0.0.1,8.8.4.4}"
 
 # CSV → server 行（带 group 和排除属性）
 dns_to_servers() {
@@ -34,16 +34,25 @@ CN_YAML=$(dns_to_servers cn true "$DNS_CN")
 GL_YAML=$(dns_to_servers global false "$DNS_GLOBAL")
 AI_YAML=$(dns_to_servers ai true "$DNS_AI")
 
-ECS_PRESET="${ECS_PRESET:-127.0.0.0/24}"
+# ECS: 留空则不启用
+ECS_LINE=""
+ECS_PRESET="${ECS_PRESET:-}"
+if [ -n "$ECS_PRESET" ]; then
+  ECS_LINE="edns-client-subnet $ECS_PRESET"
+fi
 
 if [ -f "$SMARTFILE_TPL" ]; then
-  awk -v cn="$CN_YAML" -v gl="$GL_YAML" -v ai="$AI_YAML" -v ecs="$ECS_PRESET" \
+  awk -v cn="$CN_YAML" -v gl="$GL_YAML" -v ai="$AI_YAML" -v ecs="$ECS_LINE" \
     '/__UPSTREAMS_CN__/{print cn;next}
      /__UPSTREAMS_GLOBAL__/{print gl;next}
      /__UPSTREAMS_AI__/{print ai;next}
-     /__ECS_PRESET__/{print ecs;next}
+     /__ECS_LINE__/{print ecs;next}
      {print}' "$SMARTFILE_TPL" > "$SMARTFILE_OUT"
-  log "config generated: CN=${#DNS_CN} GLOBAL=${#DNS_GLOBAL} AI=${#DNS_AI} ECS=$ECS_PRESET"
+  if [ -n "$ECS_PRESET" ]; then
+    log "config generated: CN=$DNS_CN GLOBAL=$DNS_GLOBAL AI=$DNS_AI ECS=$ECS_PRESET"
+  else
+    log "config generated: CN=$DNS_CN GLOBAL=$DNS_GLOBAL AI=$DNS_AI ECS=disabled"
+  fi
 else
   log "ERROR: Smartfile template not found at $SMARTFILE_TPL"
   exit 1
