@@ -4,8 +4,10 @@ FROM pymumu/smartdns:latest
 #   curl       - 下载规则文件
 #   bash       - 脚本运行
 #   procps     - pgrep/pkill（SIGHUP 信号重载）
-#   bind-tools - nslookup（AI 域名解析）
-RUN apk add --no-cache curl bash procps bind-tools
+#   dnsutils   - nslookup（AI 域名解析）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl bash procps dnsutils \
+    && rm -rf /var/lib/apt/lists/*
 
 # 复制所有运行时脚本
 COPY scripts/entrypoint.sh /entrypoint.sh
