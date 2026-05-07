@@ -9,7 +9,9 @@ WORKDIR /smartdns-src
 
 # TARGETPLATFORM 格式: linux/amd64, linux/arm64, linux/arm/v7
 # 转为 Go 交叉编译变量
-RUN GOOS=linux \
+# smartdns master 可能无 go.mod，go mod init 自动处理
+RUN go mod init github.com/pymumu/smartdns 2>/dev/null; \
+    GOOS=linux \
     GOARCH=$(echo "$TARGETPLATFORM" | cut -d/ -f2) \
     GOARM=$(echo "$TARGETPLATFORM" | grep -oE 'v[0-9]+' | tr -d 'v') \
     CGO_ENABLED=0 \
