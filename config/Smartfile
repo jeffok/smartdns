@@ -1,0 +1,71 @@
+# ==========================================
+# SmartDNS 配置文件（模板）
+# __UPSTREAMS_CN__ / __UPSTREAMS_GLOBAL__ / __UPSTREAMS_AI__
+# 由 entrypoint.sh 从 .env 变量动态生成
+# ==========================================
+
+# --- 通用 ---
+log-level error
+log-file /var/log/smartdns/smartdns.log
+log-size 128k
+log-num 2
+cache-size 10240
+prefetch-domain yes
+serve-expired yes
+serve-expired-ttl 259200
+
+# --- TTL ---
+rr-ttl-min 60
+rr-ttl-max 600
+rr-ttl 300
+
+# --- 双栈优先 ---
+dualstack-ip-selection yes
+
+# --- ECS (EDNS Client Subnet) ---
+edns-client-subnet __ECS_PRESET__
+
+# ==========================================
+# 域名数据集
+# ==========================================
+domain-set -name cn_domains -file /etc/smartdns/rules/cn_domains.txt
+domain-set -name apple_domains -file /etc/smartdns/rules/apple-cn.txt
+domain-set -name proxy_domains -file /etc/smartdns/rules/proxy-list.txt
+domain-set -name gfw_domains -file /etc/smartdns/rules/geosite-gfw.txt
+domain-set -name ai_domains -file /etc/smartdns/rules/ai-list.txt
+domain-set -name custom_local -file /etc/smartdns/rules/custom-local.txt
+
+# ==========================================
+# 上游 DNS 服务器（由 .env → entrypoint 生成）
+# ==========================================
+__UPSTREAMS_CN__
+
+__UPSTREAMS_GLOBAL__
+
+__UPSTREAMS_AI__
+
+# ==========================================
+# 域名路由规则（顺序 = 优先级）
+# ==========================================
+domain-rules domain-set:custom_local -group cn
+domain-rules domain-set:cn_domains -group cn
+domain-rules domain-set:apple_domains -group cn
+domain-rules domain-set:ai_domains -group ai
+domain-rules domain-set:proxy_domains -group global
+domain-rules domain-set:gfw_domains -group global
+
+# ==========================================
+# Hosts
+# ==========================================
+hosts /etc/smartdns/rules/custom-hosts.txt
+
+# ==========================================
+# 虚假响应 IP 过滤
+# ==========================================
+conf-file /etc/smartdns/rules/bogus-nxdomain.china.conf
+
+# ==========================================
+# 监听
+# ==========================================
+bind :53
+bind-tcp :53

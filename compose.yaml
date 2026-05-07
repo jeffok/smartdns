@@ -1,0 +1,13 @@
+services:
+  smartdns:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    container_name: smartdns
+    restart: always
+    network_mode: "host"
+    volumes:
+      - ./config/Smartfile:/etc/smartdns/Smartfile:ro
+      - ./data/rules:/etc/smartdns/rules
+      - ./data/logs:/var/log/smartdns
+    env_file: .env

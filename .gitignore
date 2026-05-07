@@ -1,0 +1,20 @@
+# Auto-generated rule files
+data/rules/cn_domains.txt
+data/rules/direct-list.txt
+data/rules/apple-cn.txt
+data/rules/proxy-list.txt
+data/rules/geosite-gfw.txt
+data/rules/china_ip_list.txt
+data/rules/bogus-nxdomain.china.conf
+data/rules/accelerated-domains.china.conf
+data/rules/apple.china.conf
+
+# Runtime data
+data/logs/
+
+# Editor temp files
+*.swp
+*.swo
+
+# Local config override
+.env

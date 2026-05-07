@@ -1,0 +1,56 @@
+# AI domains for -group ai
+# 保持精简，仅保留核心 Chat 界面、API 和静态资源
+# 来源：mosdns 项目 rules/ai-list.txt
+
+# ================== OpenAI / ChatGPT ==================
+openai.com
+chat.openai.com
+chatgpt.com
+auth0.openai.com
+auth.openai.com
+api.openai.com
+platform.openai.com
+developers.openai.com
+help.openai.com
+files.openai.com
+oaiusercontent.com
+oaistatic.com
+cdn.oaistatic.com
+cdn.openai.com
+ios.chat.openai.com
+android.chat.openai.com
+sora.com
+
+# ================== Google Gemini / AI ==================
+gemini.google.com
+bard.google.com
+ai.google.dev
+aistudio.google.com
+generativelanguage.googleapis.com
+aiplatform.googleapis.com
+
+# ================== Anthropic / Claude ==================
+claude.ai
+api.anthropic.com
+console.anthropic.com
+claudeusercontent.com
+cdn.anthropic.com
+
+# ================== Microsoft Copilot ==================
+copilot.microsoft.com
+sydney.bing.com
+edgeservices.bing.com
+
+# ================== Perplexity AI ==================
+perplexity.ai
+www.perplexity.ai
+api.perplexity.ai
+
+# ================== xAI / Grok ==================
+x.ai
+grok.com
+api.x.ai
+
+# ================== Meta AI ==================
+meta.ai
+www.meta.ai
