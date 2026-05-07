@@ -4,8 +4,8 @@ ARG TARGETPLATFORM
 
 RUN apk add --no-cache git
 
-WORKDIR /build
-RUN git clone --depth 1 https://github.com/pymumu/smartdns.git .
+RUN git clone --depth 1 https://github.com/pymumu/smartdns.git /smartdns-src
+WORKDIR /smartdns-src
 
 # TARGETPLATFORM 格式: linux/amd64, linux/arm64, linux/arm/v7
 # 转为 Go 交叉编译变量
@@ -13,7 +13,7 @@ RUN GOOS=linux \
     GOARCH=$(echo "$TARGETPLATFORM" | cut -d/ -f2) \
     GOARM=$(echo "$TARGETPLATFORM" | grep -oE 'v[0-9]+' | tr -d 'v') \
     CGO_ENABLED=0 \
-    go build -ldflags="-w -s" -o /smartdns
+    go build -ldflags="-w -s" -o /smartdns .
 
 # Stage 2: 运行环境
 FROM alpine:3.20
