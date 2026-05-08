@@ -25,8 +25,9 @@ WORKDIR /build
 RUN curl -sSL "https://github.com/pymumu/smartdns/archive/refs/tags/${SMARTDNS_VER}.tar.gz" \
     | tar -zxv --strip-components=1
 
-# 编译（静态链接 + Web UI）
-ENV PATH="/root/.cargo/bin:${PATH}"
+# 编译（静态链接 + Web UI，GCC 有 memcmp bug 需用 clang）
+ENV PATH="/root/.cargo/bin:${PATH}" \
+    CC=clang CXX=clang++
 RUN sh package/build-pkg.sh \
     --platform linux \
     --arch $(dpkg --print-architecture) \
