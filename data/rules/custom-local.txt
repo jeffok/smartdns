@@ -1,4 +1,6 @@
 # 走国内 DNS 解析的自定义域名（每行一个，后缀匹配）
-# 在此添加不在 Loyalsoldier 列表中但需要走国内 DNS 的域名
-# internal.company.com
-# corp.example.cn
+# 不在 Loyalsoldier 列表中但需要国内加速的域名填在这里
+#
+# 使用示例：
+#   example.cn
+#   my-cdn.internal.com
