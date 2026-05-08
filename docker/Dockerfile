@@ -27,7 +27,8 @@ RUN curl -sSL "https://github.com/pymumu/smartdns/archive/refs/tags/${SMARTDNS_V
 
 # 编译（静态链接 + Web UI，GCC 有 memcmp bug 需用 clang）
 ENV PATH="/root/.cargo/bin:${PATH}" \
-    CC=clang CXX=clang++
+    CC=clang CXX=clang++ \
+    AWS_LC_SYS_EXTERNAL_MEMCHECK=0
 RUN sh package/build-pkg.sh \
     --platform linux \
     --arch $(dpkg --print-architecture) \
