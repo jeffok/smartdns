@@ -7,6 +7,8 @@ on:
       - "*.md"
       - ".env.example"
       - ".gitignore"
+  schedule:
+    - cron: '0 4 1 * *'  # 每月 1 号 04:00 UTC 定时构建（保持镜像最新）
   workflow_dispatch:
 
 jobs:
@@ -29,6 +31,7 @@ jobs:
           context: ./docker
           file: ./docker/Dockerfile
           platforms: linux/amd64,linux/arm64
+          pull: true
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/smartdns:latest
