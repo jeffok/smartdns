@@ -3,6 +3,7 @@ services:
     build:
       context: ./docker
       dockerfile: Dockerfile
+    image: jeffok/smartdns:latest
     container_name: smartdns
     restart: always
     network_mode: "host"
