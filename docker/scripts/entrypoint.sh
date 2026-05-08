@@ -36,8 +36,8 @@ EOMIN
     fi
 fi
 
-# 确保其他规则文件存在
-for f in custom-hosts.txt custom-local.txt ai-list.txt; do
+# 确保 custom-hosts / custom-local 存在（用户编辑文件，不覆盖）
+for f in custom-hosts.txt custom-local.txt; do
     if [ ! -f "$RULES_DIR/$f" ]; then
         if [ -f "$DEFAULT_DIR/$f" ]; then
             cp "$DEFAULT_DIR/$f" "$RULES_DIR/$f" 2>/dev/null || true
@@ -46,6 +46,12 @@ for f in custom-hosts.txt custom-local.txt ai-list.txt; do
         log "created $f"
     fi
 done
+
+# ai-list.txt 始终从镜像内置默认覆盖（云端同步脚本会后续拉取最新版）
+if [ -f "$DEFAULT_DIR/ai-list.txt" ]; then
+    cp -f "$DEFAULT_DIR/ai-list.txt" "$RULES_DIR/ai-list.txt" 2>/dev/null || true
+    log "synced ai-list.txt from image default"
+fi
 
 set -e
 
