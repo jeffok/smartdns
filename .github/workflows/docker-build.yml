@@ -26,6 +26,10 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Generate date tag
+        id: date
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
       - uses: docker/build-push-action@v5
         with:
           context: ./docker
@@ -36,3 +40,5 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/smartdns:latest
             ${{ secrets.DOCKER_USERNAME }}/smartdns:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/smartdns:${{ steps.date.outputs.date }}
+            ${{ secrets.DOCKER_USERNAME }}/smartdns:${{ github.event.repository.updated_at | date 'YYYYMMDD' }}
