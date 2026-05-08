@@ -6,8 +6,9 @@ FROM alpine:3.20
 
 RUN apk add --no-cache curl bash procps bind-tools
 
-# 复制 SmartDNS 静态二进制（官方镜像多架构，buildx 自动拉取对应架构）
+# 复制 SmartDNS 二进制及其自带 glibc 库
 COPY --from=smartdns /usr/sbin/smartdns /usr/sbin/smartdns
+COPY --from=smartdns /usr/sbin/lib /usr/sbin/lib
 
 # 复制运行时脚本
 COPY scripts/entrypoint.sh /entrypoint.sh
