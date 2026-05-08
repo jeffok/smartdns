@@ -2,7 +2,6 @@
 # SmartDNS 入口脚本
 # 功能: 模板生成 + 初始规则下载 + AI 同步 + crond 定时维护 + 前台运行
 # ==========================================
-set -e
 
 WORKDIR="/opt/smartdns"
 SMARTFILE_TPL="/etc/smartdns/rules/Smartfile"
@@ -11,21 +10,44 @@ DEFAULT_DIR="/opt/smartdns/default"
 
 log() { echo "[entrypoint] $*"; }
 
-# ---- 0. 初始化规则目录（确保每个必需文件都存在）----
+# ---- 0. 初始化规则目录（在 set -e 之前，失败不阻塞启动）----
 RULES_DIR="/etc/smartdns/rules"
-mkdir -p "$RULES_DIR"
+mkdir -p "$RULES_DIR" 2>/dev/null || true
 
-for f in Smartfile custom-hosts.txt custom-local.txt ai-list.txt; do
+# 确保 Smartfile 存在（从内置默认复制，或生成最小配置）
+if [ ! -f "$RULES_DIR/Smartfile" ]; then
+    if [ -f "$DEFAULT_DIR/Smartfile" ]; then
+        cp "$DEFAULT_DIR/Smartfile" "$RULES_DIR/Smartfile" 2>/dev/null && log "created Smartfile" || SMARTFILE_FAIL=1
+    else
+        SMARTFILE_FAIL=1
+    fi
+    if [ "$SMARTFILE_FAIL" = "1" ]; then
+        # 最小可用配置（不含上游占位符，交由后续 .env 替换）
+        cat > "$RULES_DIR/Smartfile" << 'EOMIN'
+bind :53
+bind-tcp :53
+__UPSTREAMS_CN__
+__UPSTREAMS_GLOBAL__
+__UPSTREAMS_AI__
+hosts-file /etc/smartdns/rules/custom-hosts.txt
+conf-file /etc/smartdns/rules/bogus-nxdomain.china.conf
+EOMIN
+        log "created minimal Smartfile"
+    fi
+fi
+
+# 确保其他规则文件存在
+for f in custom-hosts.txt custom-local.txt ai-list.txt; do
     if [ ! -f "$RULES_DIR/$f" ]; then
         if [ -f "$DEFAULT_DIR/$f" ]; then
-            cp "$DEFAULT_DIR/$f" "$RULES_DIR/$f"
-            log "created $f from built-in defaults"
-        else
-            touch "$RULES_DIR/$f"
-            log "created empty $f"
+            cp "$DEFAULT_DIR/$f" "$RULES_DIR/$f" 2>/dev/null || true
         fi
+        [ -f "$RULES_DIR/$f" ] || echo "# $f" > "$RULES_DIR/$f" 2>/dev/null || true
+        log "created $f"
     fi
 done
+
+set -e
 
 # ---- 1. 容器内部 DNS ----
 CONTAINER_DNS="${CONTAINER_DNS:-8.8.8.8}"
