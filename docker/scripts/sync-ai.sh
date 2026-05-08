@@ -56,7 +56,7 @@ request_smartdns_reload() {
   [ "$RELOAD_ON_AI_LIST_CHANGE" = "0" ] && return 0
   [ "$RELOAD_ON_AI_LIST_CHANGE" = "false" ] && return 0
 
-  if smartdns -signal reload 2>/dev/null || pkill -HUP smartdns 2>/dev/null; then
+  if pkill -HUP smartdns 2>/dev/null || smartdns -signal reload 2>/dev/null; then
     echo "[sync-ai] ai-list changed, smartdns reloaded via SIGHUP"
     return 0
   fi

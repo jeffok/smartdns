@@ -87,11 +87,10 @@ log "=== 更新完成 ==="
 # 有变化则优雅重载 SmartDNS（同容器内 SIGHUP，不丢请求）
 if [ "$CHANGED" = "1" ]; then
     log "规则有变更，重载 smartdns..."
-    if smartdns -signal reload 2>/dev/null || pkill -HUP smartdns 2>/dev/null; then
+    if pkill -HUP smartdns 2>/dev/null || smartdns -signal reload 2>/dev/null; then
         log "smartdns 优雅重载完成"
     else
-        log "✖ 重载失败，配置可能有误"
-        exit 1
+        log "✖ 重载失败（不影响当前运行，下次重启生效）"
     fi
 else
     log "规则无变更，跳过重载"
