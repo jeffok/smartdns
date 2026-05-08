@@ -6,9 +6,10 @@ FROM alpine:3.20
 
 RUN apk add --no-cache curl bash procps bind-tools
 
-# 复制 SmartDNS 完整安装（二进制 + run-smartdns 脚本 + 自带 glibc/ssl 库）
+# 复制 SmartDNS 完整安装树（二进制 + 脚本 + 自带 glibc/ssl 库）
 COPY --from=smartdns /usr/local/lib/smartdns/ /usr/local/lib/smartdns/
-COPY --from=smartdns /usr/sbin/smartdns /usr/sbin/smartdns
+# 手动创建符号链接（Docker COPY 会跟随符号链接复制内容，导致路径错乱）
+RUN ln -s /usr/local/lib/smartdns/run-smartdns /usr/sbin/smartdns
 
 # 复制运行时脚本
 COPY scripts/entrypoint.sh /entrypoint.sh
