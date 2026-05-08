@@ -19,11 +19,6 @@ rr-ttl-min 60
 rr-ttl-max 600
 rr-ttl 300
 
-# --- 双栈优先 ---
-dualstack-ip-selection yes
-# 禁用 IPv6 AAAA 解析（返回 SOA）
-force-aaaa-soa
-
 # ECS 由 entrypoint 根据 ECS_PRESET 环境变量决定是否启用
 __ECS_LINE__
 
