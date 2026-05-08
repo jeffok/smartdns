@@ -8,7 +8,7 @@ ARG SMARTDNS_VER=Release47
 # 构建基础依赖
 RUN apt-get update && apt-get install -y \
     curl make gcc clang wget unzip ca-certificates binutils perl \
-    pkg-config libssl-dev \
+    pkg-config libssl-dev cmake golang-go \
     && rm -rf /var/lib/apt/lists/*
 
 # Node.js（Web UI 前端）
