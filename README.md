@@ -270,11 +270,9 @@ smartdns/
 │       ├── update.sh           # 规则下载合并（容器内执行）
 │       └── sync-ai.sh          # AI 域名同步 + RouterOS 联动
 │
-├── config/
-│   └── Smartfile               # SmartDNS 配置模板（entrypoint 处理占位符）
-│
-└── data/                       # 运行时数据（挂载卷）
-    ├── rules/
+└── data/                       # 运行时数据（挂载卷，仅 2 个挂载点）
+    ├── rules/                  # Smartfile + 域名规则（全部挂载到 /etc/smartdns/rules）
+    │   ├── Smartfile           #   SmartDNS 配置模板（entrypoint 处理占位符）
     │   ├── ai-list.txt         #   用户自定义（已跟踪）
     │   ├── custom-hosts.txt    #   用户自定义，不被覆盖（已跟踪）
     │   └── custom-local.txt    #   用户自定义，不被覆盖（已跟踪）

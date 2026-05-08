@@ -5,7 +5,7 @@
 set -e
 
 WORKDIR="/opt/smartdns"
-SMARTFILE_TPL="/etc/smartdns/Smartfile"
+SMARTFILE_TPL="/etc/smartdns/rules/Smartfile"
 SMARTFILE_OUT="/etc/smartdns/smartdns.conf"
 
 log() { echo "[entrypoint] $*"; }
