@@ -104,7 +104,7 @@ ECS_PRESET=8.8.8.8
 
 | 变量 | 默认值 | 说明 |
 |:---|:---|:---|
-| `AI_LIST_URL` | GitHub mosdns 项目 `rules/ai-list.txt` | 远端地址，支持 `|` 多源 |
+| `AI_LIST_URL` | GitHub smartdns 项目 `data/rules/ai-list.txt` | 远端地址，支持 `|` 多源 |
 | `RELOAD_ON_AI_LIST_CHANGE` | `1` | 变更后是否自动 SIGHUP 重载 |
 
 ### 通用

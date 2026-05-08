@@ -1,6 +1,6 @@
 # AI domains for -group ai
 # 保持精简，仅保留核心 Chat 界面、API 和静态资源
-# 来源：mosdns 项目 rules/ai-list.txt
+# 来源：smartdns 项目 data/rules/ai-list.txt
 
 # ================== OpenAI / ChatGPT ==================
 openai.com
@@ -54,3 +54,17 @@ api.x.ai
 # ================== Meta AI ==================
 meta.ai
 www.meta.ai
+
+# ================== X / Twitter ==================
+x.com
+api.x.com
+twitter.com
+api.twitter.com
+t.co
+help.twitter.com
+help.x.com
+abs.twimg.com
+pbs.twimg.com
+video.twimg.com
+upload.twitter.com
+upload.x.com
