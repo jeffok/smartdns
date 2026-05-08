@@ -1,8 +1,5 @@
 services:
   smartdns:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
     image: jeffok/smartdns:latest
     container_name: smartdns
     restart: always
