@@ -7,8 +7,17 @@ set -e
 WORKDIR="/opt/smartdns"
 SMARTFILE_TPL="/etc/smartdns/rules/Smartfile"
 SMARTFILE_OUT="/etc/smartdns/smartdns.conf"
+DEFAULT_DIR="/opt/smartdns/default"
 
 log() { echo "[entrypoint] $*"; }
+
+# ---- 0. 初始化规则目录（挂载卷为空时从内置默认复制）----
+if [ ! -f "$SMARTFILE_TPL" ]; then
+    log "Smartfile not found, copying defaults..."
+    mkdir -p "$(dirname "$SMARTFILE_TPL")"
+    cp -r "$DEFAULT_DIR/"* "$(dirname "$SMARTFILE_TPL")/"
+    log "defaults copied to $(dirname "$SMARTFILE_TPL")"
+fi
 
 # ---- 1. 容器内部 DNS ----
 CONTAINER_DNS="${CONTAINER_DNS:-8.8.8.8}"

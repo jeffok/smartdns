@@ -10,10 +10,16 @@ RUN apk add --no-cache curl bash procps bind-tools
 COPY --from=smartdns /usr/local/lib/smartdns/ /usr/local/lib/smartdns/
 RUN ln -s /usr/local/lib/smartdns/run-smartdns /usr/sbin/smartdns
 
-COPY scripts/entrypoint.sh /entrypoint.sh
-COPY scripts/update.sh /opt/smartdns/update.sh
-COPY scripts/sync-ai.sh /opt/smartdns/sync-ai.sh
-COPY scripts/healthcheck.sh /opt/smartdns/healthcheck.sh
+COPY docker/scripts/entrypoint.sh /entrypoint.sh
+COPY docker/scripts/update.sh /opt/smartdns/update.sh
+COPY docker/scripts/sync-ai.sh /opt/smartdns/sync-ai.sh
+COPY docker/scripts/healthcheck.sh /opt/smartdns/healthcheck.sh
+
+# 内置默认配置（挂载卷为空时自动复制）
+COPY data/rules/Smartfile /opt/smartdns/default/Smartfile
+COPY data/rules/custom-hosts.txt /opt/smartdns/default/custom-hosts.txt
+COPY data/rules/custom-local.txt /opt/smartdns/default/custom-local.txt
+COPY data/rules/ai-list.txt /opt/smartdns/default/ai-list.txt
 
 RUN chmod +x /entrypoint.sh /opt/smartdns/update.sh /opt/smartdns/sync-ai.sh /opt/smartdns/healthcheck.sh
 
