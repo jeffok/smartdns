@@ -5,7 +5,7 @@
 # ==========================================
 RULES=/etc/smartdns/rules
 AI_LIST="$RULES/ai-list.txt"
-AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/smartdns/main/data/rules/ai-list.txt|https://gh-proxy.com/https://raw.githubusercontent.com/jeffok/smartdns/main/data/rules/ai-list.txt}"
+AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/smartdns/refs/heads/master/data/rules/ai-list.txt|https://gh-proxy.com/https://raw.githubusercontent.com/jeffok/smartdns/refs/heads/master/data/rules/ai-list.txt}"
 LIST="ai-sgp"
 COMMENT="smartdns-ai"
 TTL="1800s"
