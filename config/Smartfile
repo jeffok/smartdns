@@ -42,6 +42,11 @@ __UPSTREAMS_CN__
 
 __UPSTREAMS_GLOBAL__
 
+# 全球 DNS 上游（DoT/DoH 加密，抗污染）
+server-tls 1.1.1.1 -group global -no-check-certificate
+server-tls 8.8.8.8 -group global -no-check-certificate
+server-https https://cloudflare-dns.com/dns-query -group global -no-check-certificate
+
 __UPSTREAMS_AI__
 
 # ==========================================

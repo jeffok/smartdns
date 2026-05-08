@@ -13,7 +13,13 @@ COPY --from=smartdns /usr/sbin/smartdns /usr/sbin/smartdns
 COPY scripts/entrypoint.sh /entrypoint.sh
 COPY scripts/update.sh /opt/smartdns/update.sh
 COPY scripts/sync-ai.sh /opt/smartdns/sync-ai.sh
+COPY scripts/healthcheck.sh /opt/smartdns/healthcheck.sh
 
-RUN chmod +x /entrypoint.sh /opt/smartdns/update.sh /opt/smartdns/sync-ai.sh
+RUN chmod +x /entrypoint.sh /opt/smartdns/update.sh /opt/smartdns/sync-ai.sh /opt/smartdns/healthcheck.sh
+
+# 通用健康检查：所有 Docker 部署方式均生效（compose / docker run / swarm / k8s）
+# 覆盖 compose.yaml 中的 healthcheck 即可自定义
+HEALTHCHECK --start-period=30s --interval=30s --timeout=5s --retries=3 \
+    CMD ["/opt/smartdns/healthcheck.sh"]
 
 ENTRYPOINT ["/entrypoint.sh"]

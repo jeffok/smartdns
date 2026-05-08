@@ -58,14 +58,19 @@ else
   exit 1
 fi
 
-# ---- 3. 初始规则下载 ----
+# ---- 3. 清理超过 2 天的日志 ----
+find /var/log/smartdns/ -type f -name "*.log*" -mtime +2 -delete 2>/dev/null || true
+log "cleaned logs older than 2 days"
+
+# ---- 4. 初始规则下载 ----
 log "running initial rule update..."
 $WORKDIR/update.sh
 log "initial rule update done"
 
-# ---- 4. crond 定时任务 ----
+# ---- 5. crond 定时任务 ----
 {
   echo "30 4 * * * $WORKDIR/update.sh >/dev/null 2>&1"
+  echo "30 4 * * * find /var/log/smartdns/ -type f -name '*.log*' -mtime +2 -delete 2>/dev/null || true"
   echo "*/2 * * * * $WORKDIR/sync-ai.sh >/dev/null 2>&1"
 } | crontab -
 crond -b -l 2
