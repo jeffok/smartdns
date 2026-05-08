@@ -7,7 +7,6 @@ services:
     container_name: smartdns
     restart: always
     network_mode: "host"
-    # Web 管理界面（host 网络下直接访问 http://<IP>:6080，由 smartdns_ui.so 提供）
     volumes:
       - ./data/rules:/etc/smartdns/rules
       - ./data/logs:/var/log/smartdns
