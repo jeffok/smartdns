@@ -41,4 +41,3 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/smartdns:latest
             ${{ secrets.DOCKER_USERNAME }}/smartdns:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/smartdns:${{ steps.date.outputs.date }}
-            ${{ secrets.DOCKER_USERNAME }}/smartdns:${{ github.event.repository.updated_at | date 'YYYYMMDD' }}
