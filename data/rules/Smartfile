@@ -62,7 +62,7 @@ domain-rules domain-set:gfw_domains -group global
 # ==========================================
 # Hosts
 # ==========================================
-hosts /etc/smartdns/rules/custom-hosts.txt
+hosts-file /etc/smartdns/rules/custom-hosts.txt
 
 # ==========================================
 # 虚假响应 IP 过滤

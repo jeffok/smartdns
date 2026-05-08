@@ -1,9 +1,11 @@
 # 静态 IP 映射（格式：IP 域名）
 # 优先级高于所有上游 DNS，匹配的域名不再走上游查询
-#
+# 至少保留一条记录避免 SmartDNS 报 unsupported config
+
 # 使用示例：
 #   127.0.0.1 localtest.dev
 #   10.0.0.100 nas.home
 
-# （添加你的条目，一行一个 IP+域名）
+# 默认空记录（避免空文件警告）
+127.0.0.1 localhost
 
