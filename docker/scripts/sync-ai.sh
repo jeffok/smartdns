@@ -5,7 +5,7 @@
 # ==========================================
 RULES=/etc/smartdns/rules
 AI_LIST="$RULES/ai-list.txt"
-AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/smartdns/master/data/rules/ai-list.txt|https://gh-proxy.com/https://raw.githubusercontent.com/jeffok/smartdns/master/data/rules/ai-list.txt}"
+AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/smartdns/master/data/rules/ai-list.txt}"
 LIST="ai-sgp"
 COMMENT="smartdns-ai"
 TTL="1800s"
@@ -28,18 +28,24 @@ refresh_ai_list() {
     url=$(echo "$url" | xargs)
     [ -z "$url" ] && continue
 
-    if curl -sSL --connect-timeout 10 --max-time 30 -o "$tmp" "$url" 2>/dev/null && [ -s "$tmp" ]; then
-      if [ -f "$AI_LIST" ] && cmp -s "$AI_LIST" "$tmp"; then
-        rm -f "$tmp"
-      else
-        mv "$tmp" "$AI_LIST"
-        AI_LIST_CHANGED=1
-        echo "[sync-ai] refreshed ai-list from $url (changed)"
+    # 尝试原始 URL + 多个镜像代理
+    for src in "$url" \
+        "https://gh-proxy.com/$url" \
+        "https://mirror.ghproxy.com/$url" \
+        "https://ghfast.top/$url"; do
+      if curl -sSL --connect-timeout 10 --max-time 30 -o "$tmp" "$src" 2>/dev/null && [ -s "$tmp" ]; then
+        if [ -f "$AI_LIST" ] && cmp -s "$AI_LIST" "$tmp"; then
+          rm -f "$tmp"
+        else
+          mv "$tmp" "$AI_LIST"
+          AI_LIST_CHANGED=1
+          echo "[sync-ai] refreshed ai-list from $src (changed)"
+        fi
+        downloaded=1
+        break 2
       fi
-      downloaded=1
-      break
-    fi
-    rm -f "$tmp"
+      rm -f "$tmp"
+    done
   done
 
   if [ "$downloaded" = "0" ]; then
