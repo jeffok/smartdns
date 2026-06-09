@@ -8,5 +8,4 @@ services:
       - ./data/rules:/etc/smartdns/rules
       - ./data/logs:/var/log/smartdns
       - ./docker/scripts/sync-ai.sh:/opt/smartdns/sync-ai.sh:ro
-      - ./docker/scripts/entrypoint.sh:/entrypoint.sh:ro
     env_file: .env
