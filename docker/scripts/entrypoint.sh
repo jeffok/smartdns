@@ -116,10 +116,10 @@ log "initial rule update done"
 {
   echo "30 4 * * * $WORKDIR/update.sh >/dev/null 2>&1"
   echo "30 4 * * * find /var/log/smartdns/ -type f -name '*.log*' -mtime +2 -delete 2>/dev/null || true"
-  echo "*/2 * * * * $WORKDIR/sync-ai.sh >/dev/null 2>&1"
+  echo "*/30 * * * * $WORKDIR/sync-ai.sh >/dev/null 2>&1"
 } | crontab -
 crond -b -l 2
-log "crond started (update@04:30, sync-ai@*/2)"
+log "crond started (update@04:30, sync-ai@*/30)"
 
 # ---- 5. 启动时执行一次 AI 同步 ----
 log "running initial AI sync..."

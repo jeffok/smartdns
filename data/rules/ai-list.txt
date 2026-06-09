@@ -21,14 +21,6 @@ ios.chat.openai.com
 android.chat.openai.com
 sora.com
 
-# ================== Google Gemini / AI ==================
-gemini.google.com
-bard.google.com
-ai.google.dev
-aistudio.google.com
-generativelanguage.googleapis.com
-aiplatform.googleapis.com
-
 # ================== Anthropic / Claude ==================
 claude.ai
 api.anthropic.com

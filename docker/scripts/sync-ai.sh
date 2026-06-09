@@ -1,6 +1,6 @@
 #!/bin/sh
 # sync-ai.sh — 解析 AI 域名并通过 REST API 写入 RouterOS address-list
-# 由 entrypoint.sh 启动时和 crond 定时触发（每 2 分钟）
+# 由 entrypoint.sh 启动时和 crond 定时触发（每 30 分钟）
 # 仅在配置了 ROS_HOST + ROS_PASS 时执行 RouterOS 同步
 # ==========================================
 RULES=/etc/smartdns/rules
@@ -8,7 +8,7 @@ AI_LIST="$RULES/ai-list.txt"
 AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/smartdns/master/data/rules/ai-list.txt}"
 LIST="ai-sgp"
 COMMENT="smartdns-ai"
-TTL="1800s"
+TTL="3600s"
 # 容器内部专用 DNS，确保 AI 域名解析不受上游 DNS 影响
 DNS="${CONTAINER_DNS:-8.8.8.8}"
 RELOAD_ON_AI_LIST_CHANGE="${RELOAD_ON_AI_LIST_CHANGE:-1}"
