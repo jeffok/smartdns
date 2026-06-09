@@ -122,7 +122,7 @@ is_valid_ipv4() {
 # 1. 清理 RouterOS 旧条目
 echo "[sync-ai] cleaning old ROS entries..."
 OLD_IDS=$(api_get "${API}?list=${LIST}&comment=${COMMENT}" \
-  | grep -o '"\."id"[^,]*' | cut -d'"' -f4)
+  | grep -o '".id":"[^"]*"' | cut -d'"' -f4)
 DEL_COUNT=0
 for id in $OLD_IDS; do
   api_post "${API}/remove" "{\".id\":\"${id}\"}" >/dev/null && DEL_COUNT=$((DEL_COUNT + 1))
