@@ -21,6 +21,12 @@ ios.chat.openai.com
 android.chat.openai.com
 sora.com
 
+# ================== Google Gemini ==================
+# 仅保留 gemini.google.com 和 bard.google.com（IP 段 142.251.x.x，与 YouTube 142.250.x.x 不重叠）
+# ai.google.dev / aistudio.google.com 解析到 142.250.x.x，与 YouTube 共享，不加入避免误伤
+gemini.google.com
+bard.google.com
+
 # ================== Anthropic / Claude ==================
 claude.ai
 api.anthropic.com

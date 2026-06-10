@@ -114,8 +114,8 @@ is_valid_ipv4() {
   o3=$(echo "$1" | cut -d. -f3); o4=$(echo "$1" | cut -d. -f4)
   [ -n "$o1" ] && [ -n "$o2" ] && [ -n "$o3" ] && [ -n "$o4" ] || return 1
   for o in "$o1" "$o2" "$o3" "$o4"; do [ "$o" -ge 0 ] && [ "$o" -le 255 ] || return 1; done
-  [ "$o1" -eq 0 ] || [ "$o1" -eq 127 ] && return 1
-  [ "$o1" -eq 169 ] && [ "$o2" -eq 254 ] && return 1
+  { [ "$o1" -eq 0 ] || [ "$o1" -eq 127 ]; } && return 1
+  { [ "$o1" -eq 169 ] && [ "$o2" -eq 254 ]; } && return 1
   return 0
 }
 
