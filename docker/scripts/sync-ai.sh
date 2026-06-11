@@ -1,16 +1,21 @@
 #!/bin/sh
 # sync-ai.sh — 解析 AI 域名并通过 REST API 写入 RouterOS address-list
-# 增量模式：只添加，不删除旧条目，依赖 TTL 自然过期
+# 策略：增量同步 + TTL 续期，每 15 分钟运行，TTL 1 小时
+# - 新 IP → add 添加
+# - 已存在 IP → PATCH 刷新 TTL
+# - 消失的 IP → 不主动删除，等 TTL 自然过期
+# - 本地缓存 diff，仅变化时输出日志
 # ==========================================
 RULES=/etc/smartdns/rules
 AI_LIST="$RULES/ai-list.txt"
 AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/smartdns/master/data/rules/ai-list.txt}"
 LIST="ai-sgp"
 COMMENT="smartdns-ai"
-TTL="7200s"
+TTL="3600s"
 DNS="${CONTAINER_DNS:-8.8.8.8}"
 RELOAD_ON_AI_LIST_CHANGE="${RELOAD_ON_AI_LIST_CHANGE:-1}"
 AI_LIST_CHANGED=0
+CACHE_FILE="/tmp/ai-sgp-last.txt"
 
 refresh_ai_list() {
   [ -z "$AI_LIST_URL" ] && return 0
@@ -103,18 +108,26 @@ ROS_USER="${ROS_USER:-admin}"
 AUTH=$(printf '%s:%s' "$ROS_USER" "$ROS_PASS" | base64)
 API="http://${ROS_HOST}/rest/ip/firewall/address-list"
 
+api_get() {
+  curl -sS --header "Authorization: Basic $AUTH" "$1" 2>/dev/null
+}
+
 api_post() {
   curl -sS --header "Authorization: Basic $AUTH" \
     --header "content-type: application/json" \
     --data "$2" "$1" 2>/dev/null
 }
 
-# 增量同步：只添加，重复由 ROS 返回 400 自动忽略，旧条目靠 TTL 过期清理
+api_patch() {
+  curl -sS --header "Authorization: Basic $AUTH" \
+    --header "content-type: application/json" \
+    -X PATCH --data "$2" "$1" 2>/dev/null
+}
+
+# 解析所有域名，收集当前 IP 列表
+CURRENT_IPS="/tmp/ai-sgp-current.txt"
+: > "$CURRENT_IPS"
 DOMAIN_COUNT=0
-IP_COUNT=0
-ADD_OK=0
-ADD_DUP=0
-ADD_FAIL=0
 
 while IFS= read -r line; do
   domain=$(echo "$line" | sed 's/#.*//' | xargs)
@@ -122,16 +135,56 @@ while IFS= read -r line; do
   DOMAIN_COUNT=$((DOMAIN_COUNT + 1))
 
   for ip in $(resolve_ipv4s "$domain"); do
-    if is_valid_ipv4 "$ip"; then
-      IP_COUNT=$((IP_COUNT + 1))
-      resp=$(api_post "${API}/add" "{\"list\":\"${LIST}\",\"address\":\"${ip}\",\"timeout\":\"${TTL}\",\"comment\":\"${COMMENT}\"}")
-      case "$resp" in
-        *'"ret"'*) ADD_OK=$((ADD_OK + 1)) ;;
-        *'already have'*) ADD_DUP=$((ADD_DUP + 1)) ;;
-        *) ADD_FAIL=$((ADD_FAIL + 1)) ;;
-      esac
-    fi
+    is_valid_ipv4 "$ip" && echo "$ip" >> "$CURRENT_IPS"
   done
 done < "$AI_LIST"
 
-echo "[sync-ai] done domains=$DOMAIN_COUNT ips=$IP_COUNT added=$ADD_OK dup=$ADD_DUP failed=$ADD_FAIL"
+# 去重排序
+sort -u "$CURRENT_IPS" -o "$CURRENT_IPS"
+IP_COUNT=$(wc -l < "$CURRENT_IPS" | tr -d ' ')
+
+# 和上次对比
+CHANGED=0
+if [ -f "$CACHE_FILE" ]; then
+  if ! cmp -s "$CACHE_FILE" "$CURRENT_IPS"; then
+    CHANGED=1
+    NEW_IPS=$(comm -13 "$CACHE_FILE" "$CURRENT_IPS" | wc -l | tr -d ' ')
+    GONE_IPS=$(comm -23 "$CACHE_FILE" "$CURRENT_IPS" | wc -l | tr -d ' ')
+    echo "[sync-ai] IP changed: +${NEW_IPS} -${GONE_IPS} (gone will expire via TTL)"
+  fi
+else
+  CHANGED=1
+fi
+
+# 同步到 ROS：对每个 IP 执行 add 或 PATCH 续期
+ADD_OK=0
+RENEW_OK=0
+FAIL=0
+
+while IFS= read -r ip; do
+  resp=$(api_post "${API}/add" "{\"list\":\"${LIST}\",\"address\":\"${ip}\",\"timeout\":\"${TTL}\",\"comment\":\"${COMMENT}\"}")
+  case "$resp" in
+    *'"ret"'*)
+      ADD_OK=$((ADD_OK + 1))
+      ;;
+    *'already have'*)
+      # 已存在，PATCH 刷新 TTL
+      entry_id=$(api_get "${API}?list=${LIST}&address=${ip}" | grep -o '".id":"[^"]*"' | head -1 | cut -d'"' -f4)
+      if [ -n "$entry_id" ]; then
+        api_patch "${API}/${entry_id}" "{\"timeout\":\"${TTL}\"}" >/dev/null && RENEW_OK=$((RENEW_OK + 1))
+      fi
+      ;;
+    *)
+      FAIL=$((FAIL + 1))
+      ;;
+  esac
+done < "$CURRENT_IPS"
+
+# 保存本次结果作为下次对比基准
+cp "$CURRENT_IPS" "$CACHE_FILE"
+rm -f "$CURRENT_IPS"
+
+# 仅在有变化或有新增/失败时输出详细日志
+if [ "$CHANGED" -eq 1 ] || [ "$ADD_OK" -gt 0 ] || [ "$FAIL" -gt 0 ]; then
+  echo "[sync-ai] done domains=$DOMAIN_COUNT ips=$IP_COUNT added=$ADD_OK renewed=$RENEW_OK failed=$FAIL"
+fi
