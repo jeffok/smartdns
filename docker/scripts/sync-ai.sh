@@ -1,7 +1,6 @@
 #!/bin/sh
 # sync-ai.sh — 解析 AI 域名并通过 REST API 写入 RouterOS address-list
-# 由 entrypoint.sh 启动时和 crond 定时触发（每 30 分钟）
-# 仅在配置了 ROS_HOST + ROS_PASS 时执行 RouterOS 同步
+# 增量模式：只添加，不删除旧条目，依赖 TTL 自然过期
 # ==========================================
 RULES=/etc/smartdns/rules
 AI_LIST="$RULES/ai-list.txt"
@@ -9,7 +8,6 @@ AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/smartdns/ma
 LIST="ai-sgp"
 COMMENT="smartdns-ai"
 TTL="3600s"
-# 容器内部专用 DNS，确保 AI 域名解析不受上游 DNS 影响
 DNS="${CONTAINER_DNS:-8.8.8.8}"
 RELOAD_ON_AI_LIST_CHANGE="${RELOAD_ON_AI_LIST_CHANGE:-1}"
 AI_LIST_CHANGED=0
@@ -28,7 +26,6 @@ refresh_ai_list() {
     url=$(echo "$url" | xargs)
     [ -z "$url" ] && continue
 
-    # 尝试原始 URL + 多个镜像代理
     for src in "$url" \
         "https://gh-proxy.com/$url" \
         "https://mirror.ghproxy.com/$url" \
@@ -79,12 +76,20 @@ resolve_ipv4s() {
   ' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort -u
 }
 
+is_valid_ipv4() {
+  case "$1" in ""|*[!0-9.]*) return 1 ;; esac
+  o1=$(echo "$1" | cut -d. -f1); o2=$(echo "$1" | cut -d. -f2)
+  o3=$(echo "$1" | cut -d. -f3); o4=$(echo "$1" | cut -d. -f4)
+  [ -n "$o1" ] && [ -n "$o2" ] && [ -n "$o3" ] && [ -n "$o4" ] || return 1
+  for o in "$o1" "$o2" "$o3" "$o4"; do [ "$o" -ge 0 ] && [ "$o" -le 255 ] || return 1; done
+  { [ "$o1" -eq 0 ] || [ "$o1" -eq 127 ]; } && return 1
+  { [ "$o1" -eq 169 ] && [ "$o2" -eq 254 ]; } && return 1
+  return 0
+}
+
 # ==========================================
 # 主流程
 # ==========================================
-
-# 默认退出条件：没有配置 ROS_HOST，不执行 RouterOS 同步
-# 但仍会刷新 ai-list.txt 并触发 SmartDNS 重载
 [ -d "$RULES" ] || mkdir -p "$RULES"
 refresh_ai_list || exit 0
 [ "$AI_LIST_CHANGED" -eq 1 ] && request_smartdns_reload
@@ -98,40 +103,17 @@ ROS_USER="${ROS_USER:-admin}"
 AUTH=$(printf '%s:%s' "$ROS_USER" "$ROS_PASS" | base64)
 API="http://${ROS_HOST}/rest/ip/firewall/address-list"
 
-api_get() {
-  curl -sS --header "Authorization: Basic $AUTH" "$1" 2>/dev/null
-}
-
 api_post() {
   curl -sS --header "Authorization: Basic $AUTH" \
     --header "content-type: application/json" \
     --data "$2" "$1" 2>/dev/null
 }
 
-is_valid_ipv4() {
-  case "$1" in ""|*[!0-9.]*) return 1 ;; esac
-  o1=$(echo "$1" | cut -d. -f1); o2=$(echo "$1" | cut -d. -f2)
-  o3=$(echo "$1" | cut -d. -f3); o4=$(echo "$1" | cut -d. -f4)
-  [ -n "$o1" ] && [ -n "$o2" ] && [ -n "$o3" ] && [ -n "$o4" ] || return 1
-  for o in "$o1" "$o2" "$o3" "$o4"; do [ "$o" -ge 0 ] && [ "$o" -le 255 ] || return 1; done
-  { [ "$o1" -eq 0 ] || [ "$o1" -eq 127 ]; } && return 1
-  { [ "$o1" -eq 169 ] && [ "$o2" -eq 254 ]; } && return 1
-  return 0
-}
-
-# 1. 清理 RouterOS 旧条目
-echo "[sync-ai] cleaning old ROS entries..."
-OLD_IDS=$(api_get "${API}?list=${LIST}&comment=${COMMENT}" \
-  | grep -o '".id":"[^"]*"' | cut -d'"' -f4)
-DEL_COUNT=0
-for id in $OLD_IDS; do
-  api_post "${API}/remove" "{\".id\":\"${id}\"}" >/dev/null && DEL_COUNT=$((DEL_COUNT + 1))
-done
-
-# 2. 解析 AI 域名并写入 ROS
+# 增量同步：只添加，重复由 ROS 返回 400 自动忽略，旧条目靠 TTL 过期清理
 DOMAIN_COUNT=0
 IP_COUNT=0
 ADD_OK=0
+ADD_DUP=0
 ADD_FAIL=0
 
 while IFS= read -r line; do
@@ -145,14 +127,11 @@ while IFS= read -r line; do
       resp=$(api_post "${API}/add" "{\"list\":\"${LIST}\",\"address\":\"${ip}\",\"timeout\":\"${TTL}\",\"comment\":\"${COMMENT}\"}")
       case "$resp" in
         *'"ret"'*) ADD_OK=$((ADD_OK + 1)) ;;
+        *'already have'*) ADD_DUP=$((ADD_DUP + 1)) ;;
         *) ADD_FAIL=$((ADD_FAIL + 1)) ;;
       esac
     fi
   done
 done < "$AI_LIST"
 
-if [ "$ADD_OK" -gt 0 ]; then
-  echo "[sync-ai] ok domains=$DOMAIN_COUNT ips=$IP_COUNT added=$ADD_OK failed=$ADD_FAIL deleted=$DEL_COUNT"
-else
-  echo "[sync-ai] WARN: domains=$DOMAIN_COUNT ips=$IP_COUNT added=0 failed=$ADD_FAIL deleted=$DEL_COUNT"
-fi
+echo "[sync-ai] done domains=$DOMAIN_COUNT ips=$IP_COUNT added=$ADD_OK dup=$ADD_DUP failed=$ADD_FAIL"
