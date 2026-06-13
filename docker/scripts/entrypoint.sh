@@ -1,6 +1,8 @@
 #!/bin/sh
-# SmartDNS 入口脚本
-# 功能: 模板生成 + 初始规则下载 + AI 同步 + crond 定时维护 + 前台运行
+# Author: Jeff
+# Date: 2025-06-01
+# Description: SmartDNS 容器入口脚本，负责模板生成、规则下载、AI 同步、crond 定时维护和前台运行
+# Copyright © 2022 by Jeff, All Rights Reserved.
 # ==========================================
 
 WORKDIR="/opt/smartdns"

@@ -1,6 +1,8 @@
 #!/bin/sh
-# SmartDNS 规则更新脚本（运行于容器内部）
-# 由 entrypoint.sh 在启动时和 crond 定时触发
+# Author: Jeff
+# Date: 2025-06-01
+# Description: SmartDNS 规则更新脚本，从多个源下载域名列表并合并去重，由 entrypoint 和 crond 触发
+# Copyright © 2022 by Jeff, All Rights Reserved.
 # ==========================================
 set -e
 

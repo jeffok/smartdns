@@ -1,3 +1,9 @@
+# Author: Jeff
+# Date: 2025-06-01
+# Description: SmartDNS 多阶段构建，从官方镜像提取二进制 + Alpine 运行环境，支持 amd64/arm64
+# Copyright © 2022 by Jeff, All Rights Reserved.
+# ==========================================
+
 # Stage 1: 从官方镜像提取 SmartDNS（含 Web UI 插件）
 FROM pymumu/smartdns:latest AS smartdns
 

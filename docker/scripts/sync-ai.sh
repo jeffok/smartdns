@@ -1,10 +1,8 @@
 #!/bin/sh
-# sync-ai.sh — 解析 AI 域名并通过 REST API 写入 RouterOS address-list
-# 策略：增量同步 + TTL 续期，每 15 分钟运行，TTL 1 小时
-# - 新 IP → add 添加
-# - 已存在 IP → PATCH 刷新 TTL
-# - 消失的 IP → 不主动删除，等 TTL 自然过期
-# - 本地缓存 diff，仅变化时输出日志
+# Author: Jeff
+# Date: 2025-06-01
+# Description: AI 域名同步脚本，解析 AI 域名 IP 并通过 REST API 写入 RouterOS address-list（增量+TTL 续期）
+# Copyright © 2022 by Jeff, All Rights Reserved.
 # ==========================================
 RULES=/etc/smartdns/rules
 AI_LIST="$RULES/ai-list.txt"
