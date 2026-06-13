@@ -104,7 +104,7 @@ ECS_PRESET=8.8.8.8
 
 | 变量 | 默认值 | 说明 |
 |:---|:---|:---|
-| `AI_LIST_URL` | GitHub smartdns 项目 `data/rules/ai-list.txt` | 远端地址，支持 `|` 多源 |
+| `AI_LIST_URL` | ASN-China `release-files/ai-domains.txt` | 远端地址，支持 `\|` 分隔多源（主备镜像） |
 | `RELOAD_ON_AI_LIST_CHANGE` | `1` | 变更后是否自动 SIGHUP 重载 |
 
 ### 通用
@@ -131,15 +131,15 @@ SmartDNS 按以下优先级逐条匹配：
 
 | 文件 | 来源 | 更新方式 | 说明 |
 |:---|:---|:---|:---|
-| `cn_domains.txt` | Loyalsoldier `direct-list.txt` + felixonmars `accelerated-domains.china.conf` + `apple.china.conf` 三源合并去重 | crond 每日 04:30 | 国内域名加速 |
-| `apple-cn.txt` | Loyalsoldier `apple-cn.txt` | crond 每日 04:30 | Apple 中国域名 |
-| `proxy-list.txt` | Loyalsoldier `proxy-list.txt` | crond 每日 04:30 | 需代理域名 |
-| `geosite-gfw.txt` | Loyalsoldier `gfw.txt` | crond 每日 04:30 | GFW 列表 |
-| `ai-list.txt` | 项目内置 + GitHub 远端同步 | sync-ai 每 2 分钟 | AI 域名 |
+| `cn_domains.txt` | ASN-China `cn-domains.txt`（Loyalsoldier + felixonmars 合并去重） | crond 每日 04:30 | 国内域名加速 |
+| `apple-cn.txt` | ASN-China `apple-cn.txt` | crond 每日 04:30 | Apple 中国域名 |
+| `proxy-list.txt` | ASN-China `proxy-domains.txt` | crond 每日 04:30 | 需代理域名 |
+| `geosite-gfw.txt` | ASN-China `gfw-domains.txt` | crond 每日 04:30 | GFW 列表 |
+| `ai-list.txt` | ASN-China `ai-domains.txt` | sync-ai 每 15 分钟 | AI 域名 |
 | `custom-local.txt` | **用户本地编辑** | 手动 | 额外国内域名（**不会被覆盖**） |
 | `custom-hosts.txt` | **用户本地编辑** | 手动 | 静态 IP 映射（**不会被覆盖**） |
 
-> `custom-local.txt` 和 `custom-hosts.txt` 为用户维护文件，`update.sh` 不会下载覆盖。
+> 所有规则默认从 GitHub 拉取，自动使用国内镜像备用（gh-proxy / mirror.ghproxy / ghfast.top）。
 
 ## 容器内部机制
 

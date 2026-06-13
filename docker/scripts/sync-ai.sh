@@ -6,7 +6,7 @@
 # ==========================================
 RULES=/etc/smartdns/rules
 AI_LIST="$RULES/ai-list.txt"
-AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/smartdns/master/data/rules/ai-list.txt}"
+AI_LIST_URL="${AI_LIST_URL:-https://raw.githubusercontent.com/jeffok/ASN-China/release-files/ai-domains.txt|https://gh-proxy.com/https://raw.githubusercontent.com/jeffok/ASN-China/release-files/ai-domains.txt|https://mirror.ghproxy.com/https://raw.githubusercontent.com/jeffok/ASN-China/release-files/ai-domains.txt}"
 LIST="ai-sgp"
 COMMENT="smartdns-ai"
 TTL="3600s"

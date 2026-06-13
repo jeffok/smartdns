@@ -1,7 +1,7 @@
 #!/bin/sh
 # Author: Jeff
 # Date: 2025-06-01
-# Description: SmartDNS 规则更新脚本，从多个源下载域名列表并合并去重，由 entrypoint 和 crond 触发
+# Description: SmartDNS 规则更新脚本，从 ASN-China 项目和上游源下载域名列表并合并去重，由 entrypoint 和 crond 触发
 # Copyright © 2022 by Jeff, All Rights Reserved.
 # ==========================================
 set -e
@@ -9,16 +9,39 @@ set -e
 RULES_DIR="/etc/smartdns/rules"
 CONFIG_FILE="/etc/smartdns/smartdns.conf"
 
+# ASN-China release-files 分支基础 URL（主备镜像）
+ASN_CHINA_PRIMARY="https://raw.githubusercontent.com/jeffok/ASN-China/release-files"
+ASN_CHINA_MIRRORS="https://gh-proxy.com/${ASN_CHINA_PRIMARY}|https://mirror.ghproxy.com/${ASN_CHINA_PRIMARY}|https://ghfast.top/${ASN_CHINA_PRIMARY}"
+
 log() { echo "[update] $(date '+%H:%M:%S') $*"; }
 
 download() {
     name="$1" url="$2" out="$RULES_DIR/$name"
     tmp="${out}.tmp"
 
-    for src in "$url" \
-        "https://gh-proxy.com/$url" \
-        "https://mirror.ghproxy.com/$url" \
-        "https://ghfast.top/$url"; do
+    # 构建主备 URL 列表
+    primary_url="$url"
+    # 如果 URL 以 ASN_CHINA_PRIMARY 开头，自动添加镜像
+    case "$url" in
+        ${ASN_CHINA_PRIMARY}*)
+            suffix="${url#${ASN_CHINA_PRIMARY}}"
+            urls="$primary_url"
+            OLD_IFS="$IFS"; IFS='|'
+            for mirror_base in $ASN_CHINA_MIRRORS; do
+                urls="$urls ${mirror_base}${suffix}"
+            done
+            IFS="$OLD_IFS"
+            ;;
+        https://raw.githubusercontent.com/*)
+            # 其他 GitHub 文件也走镜像
+            urls="$primary_url https://gh-proxy.com/$url https://mirror.ghproxy.com/$url https://ghfast.top/$url"
+            ;;
+        *)
+            urls="$primary_url"
+            ;;
+    esac
+
+    for src in $urls; do
         if curl -sSL --connect-timeout 10 --max-time 30 -o "$tmp" "$src" 2>/dev/null && [ -s "$tmp" ]; then
             if [ -f "$out" ] && cmp -s "$out" "$tmp"; then
                 log "  = $name (unchanged)"
@@ -45,44 +68,25 @@ CHANGED=0
 
 log "=== 开始更新规则文件 ==="
 
-# --- Loyalsoldier 核心规则 ---
-download direct-list.txt   "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/direct-list.txt"
-download apple-cn.txt      "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/apple-cn.txt"
-download proxy-list.txt    "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/proxy-list.txt"
-download geosite-gfw.txt   "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt"
-download china_ip_list.txt "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/text/cn.txt"
+# --- 从 ASN-China release-files 分支拉取（主数据源）---
+# 国内域名（已合并 Loyalsoldier + felixonmars，去重排序）
+download cn_domains.txt    "${ASN_CHINA_PRIMARY}/cn-domains.txt"
+# Apple 中国域名
+download apple-cn.txt      "${ASN_CHINA_PRIMARY}/apple-cn.txt"
+# 代理域名
+download proxy-list.txt    "${ASN_CHINA_PRIMARY}/proxy-domains.txt"
+# GFW 域名
+download geosite-gfw.txt   "${ASN_CHINA_PRIMARY}/gfw-domains.txt"
+# AI 域名
+download ai-list.txt       "${ASN_CHINA_PRIMARY}/ai-domains.txt"
+# 中国 IPv4 段（供 SmartDNS ip-set 使用）
+download china_ip_list.txt "${ASN_CHINA_PRIMARY}/IPv4.China.list"
 
-# --- AI 域名列表（sync-ai.sh 每 2 分钟也会同步，此处日更一次兜底）---
-download ai-list.txt       "https://raw.githubusercontent.com/jeffok/smartdns/master/data/rules/ai-list.txt"
-# custom-hosts.txt / custom-local.txt 为用户本地编辑文件，不会被覆盖
-
-# --- 虚假 NXDOMAIN IP 过滤 ---
+# --- 虚假 NXDOMAIN IP 过滤（felixonmars，ASN-China 未收录此文件）---
 download bogus-nxdomain.china.conf \
     "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/bogus-nxdomain.china.conf"
 
-# --- 国内域名增强（felixonmars 列表）---
-download accelerated-domains.china.conf \
-    "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf"
-
-download apple.china.conf \
-    "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf"
-
-# 合并 Loyalsoldier + felixonmars → cn_domains.txt（去重）
-log "  ─ 合并国内域名列表..."
-{
-    cat "$RULES_DIR/direct-list.txt"
-    awk -F '/' '/^server=/{print $2}' "$RULES_DIR/accelerated-domains.china.conf"
-    awk -F '/' '/^server=/{print $2}' "$RULES_DIR/apple.china.conf"
-} | grep -v '^#' | grep -v '^\s*$' | sort -u > "${RULES_DIR}/cn_domains.txt.tmp"
-
-if [ -f "$RULES_DIR/cn_domains.txt" ] && cmp -s "$RULES_DIR/cn_domains.txt" "${RULES_DIR}/cn_domains.txt.tmp"; then
-    log "  = cn_domains.txt (unchanged)"
-    rm -f "${RULES_DIR}/cn_domains.txt.tmp"
-else
-    mv "${RULES_DIR}/cn_domains.txt.tmp" "$RULES_DIR/cn_domains.txt"
-    log "  ✔ cn_domains.txt (merged, $(wc -l < "$RULES_DIR/cn_domains.txt") lines)"
-    CHANGED=1
-fi
+# custom-hosts.txt / custom-local.txt 为用户本地编辑文件，不会被覆盖
 
 log "=== 更新完成 ==="
 
