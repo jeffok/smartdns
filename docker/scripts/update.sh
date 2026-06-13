@@ -82,9 +82,9 @@ download ai-list.txt       "${ASN_CHINA_PRIMARY}/ai-domains.txt"
 # 中国 IPv4 段（供 SmartDNS ip-set 使用）
 download china_ip_list.txt "${ASN_CHINA_PRIMARY}/IPv4.China.list"
 
-# --- 虚假 NXDOMAIN IP 过滤（felixonmars，ASN-China 未收录此文件）---
+# --- 虚假 NXDOMAIN IP 过滤 ---
 download bogus-nxdomain.china.conf \
-    "https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/bogus-nxdomain.china.conf"
+    "${ASN_CHINA_PRIMARY}/bogus-nxdomain.china.conf"
 
 # custom-hosts.txt / custom-local.txt 为用户本地编辑文件，不会被覆盖
 
