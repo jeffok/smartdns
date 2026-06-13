@@ -72,3 +72,11 @@ pbs.twimg.com
 video.twimg.com
 upload.twitter.com
 upload.x.com
+
+# ================== Cursor ==================
+cursor.sh
+cursor.com
+cursorapi.com
+cursor-cdn.com
+download.todesktop.com
+anysphere-binaries.s3.us-east-1.amazonaws.com
