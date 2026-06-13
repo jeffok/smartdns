@@ -53,6 +53,12 @@ api.x.ai
 meta.ai
 www.meta.ai
 
+# ================== Amazon Kiro ==================
+kiro.dev
+# Kiro 认证 (Amazon Cognito us-east-1)
+cognito-idp.us-east-1.amazonaws.com
+cognito-identity.us-east-1.amazonaws.com
+
 # ================== X / Twitter ==================
 x.com
 api.x.com
